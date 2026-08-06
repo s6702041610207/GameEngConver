@@ -1,29 +1,6 @@
-/**
- * ==========================================================
- * Code.gs — Backend สำหรับเกม "ห้องสมุดต้องมนตร์"
- * ให้วางไฟล์นี้ใน Google Apps Script ที่ผูกกับ Google Sheet ของคุณ
- * ==========================================================
- *
- * วิธีติดตั้ง:
- * 1. สร้าง Google Sheet เปล่าขึ้นมา 1 ไฟล์ (ชื่ออะไรก็ได้)
- * 2. เปิดเมนู Extensions > Apps Script
- * 3. ลบโค้ดเดิมทั้งหมดในไฟล์ Code.gs แล้ววางโค้ดนี้แทน
- * 4. แก้ค่า SHEET_ID ด้านล่างให้เป็น ID ของ Google Sheet ของคุณ
- *    (คือส่วนที่อยู่ระหว่าง /d/ กับ /edit ใน URL ของ Sheet)
- * 5. กด Deploy > New deployment
- *      - Select type: Web app
- *      - Execute as: Me
- *      - Who has access: Anyone
- * 6. กด Deploy แล้วอนุญาต permission ที่ขอ (Authorize access)
- * 7. คัดลอก "Web app URL" ที่ได้ แล้วนำไปวางแทนที่
- *    GAS_URL ในไฟล์ vocabulary-escape-room.html
- *
- * หมายเหตุ: ทุกครั้งที่แก้โค้ดนี้ ต้องกด Deploy > Manage deployments
- * แล้วกด Edit (ไอคอนดินสอ) > Version: New version > Deploy ใหม่
- * เพื่อให้ URL เดิมใช้โค้ดฉบับล่าสุด
- */
 
-const SHEET_ID = 'PASTE_YOUR_GOOGLE_SHEET_ID_HERE';
+
+const SHEET_ID = '1SG3ZXcqY8lxPjPfn9_fRbkRr2wIsR0v9nimGL6qxFCY';
 const RECORDS_SHEET = 'Records';
 const PROGRESS_SHEET = 'Progress';
 
