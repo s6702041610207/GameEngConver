@@ -344,7 +344,7 @@
         <li><b>ภารกิจ:</b> แต่ละห้องมีคำถามคำศัพท์ที่ความยากเพิ่มขึ้นเรื่อย ๆ ต้องตอบให้ครบทุกข้อในห้องก่อนจึงจะเปิดประตูถัดไปได้</li>
         <li><b>คะแนน:</b> ตอบถูกได้คะแนนตามระดับความยาก (ง่าย 10 · กลาง 15 · ยาก 20 คะแนน) และมีคะแนนโบนัสหากไขห้องเสร็จโดยเหลือเวลา</li>
         <li><b>เวลา:</b> แต่ละห้องมีเวลาจำกัด แต่ถ้าเวลาหมดก็ยังเล่นต่อได้ตามปกติ เพียงไม่ได้รับคะแนนโบนัสของห้องนั้น</li>
-        <li><b>กุญแจสำรอง (ชีวิต):</b> มี 3 ดวงต่อห้อง ตอบผิดจะเสียกุญแจไป 1 ดวง แต่ไม่ทำให้เกมจบ — กุญแจจะเติมเต็มใหม่ทุกครั้งที่เข้าห้องถัดไป เรียนรู้จากคำอธิบายแล้วเล่นต่อได้เสมอ</li>
+        <li><b>กุญแจสำรอง (ชีวิต):</b> มี 3 ดวงต่อห้อง ตอบผิดจะเสียกุญแจไป 1 ดวง ถ้ากุญแจหมดทั้ง 3 ดวง ต้อง<b>เริ่มห้องนั้นใหม่</b>ด้วยคำถามชุดใหม่และกุญแจครบ 3 ดวง — เกมจะไม่จบ แค่ให้ลองใหม่ได้เสมอ</li>
         <li><b>ตอบถูกต่อเนื่อง:</b> ถ้าตอบถูกติดกันตั้งแต่ 3 ข้อขึ้นไป จะได้คะแนนโบนัส +5 ต่อข้อเพิ่มเติม พร้อมป้าย 🔥 ขึ้นเป็นกำลังใจ</li>
         <li><b>เงื่อนไขผ่านเกม:</b> ตอบครบทุกข้อในทั้ง 3 ห้อง จะได้รับสรุปผลและเหรียญรางวัลทันที ไม่ว่าคะแนนจะเป็นเท่าไรก็ตาม</li>
       </ul>
@@ -402,6 +402,7 @@
         <span class="stat-pill timer-pill" id="hudTimerPill">⏱ <span id="hudTimer">00:00</span></span>
         <span class="stat-pill lives" id="hudLives">❤❤❤</span>
         <button class="mute-btn" id="muteBtn" onclick="Game.toggleMute()" aria-label="เปิด/ปิดเสียง" title="เปิด/ปิดเสียง">🔊</button>
+        <button class="mute-btn" id="homeBtn" onclick="Game.exitToHome()" aria-label="กลับหน้าหลัก" title="กลับหน้าหลัก">🏠</button>
       </div>
 
       <div class="doors-map" id="doorsMap"></div>
@@ -434,6 +435,19 @@
         <h2 class="room-title" style="color:var(--sage);">ประตูปลดล็อกแล้ว!</h2>
         <p class="desc" id="unlockText">คุณไขคำศัพท์ในห้องนี้สำเร็จ</p>
         <button class="btn btn-primary" id="unlockNextBtn" onclick="Game.advanceRoom()">ก้าวสู่ห้องถัดไป →</button>
+      </div>
+
+      <!-- fail / out-of-hearts transition -->
+      <div id="failPanel" class="unlock-panel" style="display:none;">
+        <svg class="lock-svg" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+          <path class="shackle" d="M30 40 V28 a18 18 0 0 1 36 0 V40" fill="none" stroke="#c1502e" stroke-width="7" stroke-linecap="round"/>
+          <rect class="lock-body" x="20" y="38" width="56" height="42" rx="8" fill="#c1502e"/>
+          <circle class="lock-shine" cx="48" cy="58" r="7"/>
+          <rect class="lock-shine" x="45" y="58" width="6" height="14" rx="2"/>
+        </svg>
+        <h2 class="room-title" style="color:var(--ember);">กุญแจสำรองหมดแล้ว!</h2>
+        <p class="desc" id="failText">ห้องนี้ต้องลองใหม่อีกครั้ง ไม่เป็นไร — คุณจะได้กุญแจครบ 3 ดวงและคำถามชุดใหม่ ลองอีกทีนะ!</p>
+        <button class="btn btn-primary" onclick="Game.retryRoom()">🔑 ลองห้องนี้อีกครั้ง</button>
       </div>
     </div>
   </section>
@@ -683,11 +697,20 @@ const Game = {
   },
   playCorrectSound(){ this.playTone(660,.12); setTimeout(()=>this.playTone(880,.16),90); },
   playWrongSound(){ this.playTone(190,.22,'sawtooth'); },
+  playFailSound(){ this.playTone(220,.18,'sawtooth'); setTimeout(()=>this.playTone(140,.28,'sawtooth'),140); },
   playUnlockSound(){ this.playTone(523,.12); setTimeout(()=>this.playTone(659,.12),100); setTimeout(()=>this.playTone(784,.24),200); },
   toggleMute(){
     this.muted = !this.muted;
     const btn = document.getElementById('muteBtn');
     if(btn) btn.textContent = this.muted ? '🔇' : '🔊';
+  },
+
+  exitToHome(){
+    const ok = confirm('ต้องการออกไปหน้าหลักตอนนี้หรือไม่?\nความคืบหน้าล่าสุด (จนถึงห้องล่าสุดที่ผ่าน) ถูกบันทึกไว้แล้ว กลับมาเล่นต่อได้ทีหลังโดยกรอกรหัสเดิม');
+    if(!ok) return;
+    clearInterval(this.roomTimerHandle);
+    clearInterval(this.elapsedHandle);
+    this.showScreen('screen-start');
   },
 
   /* ---- confetti burst (pure CSS/DOM, no external assets) ---- */
@@ -757,6 +780,10 @@ const Game = {
       this.state = res.data;
       if(!this.state.streak) this.state.streak = 0;
       if(!this.state.maxStreak) this.state.maxStreak = 0;
+      if(this.state.roomAttemptStartScore === undefined) this.state.roomAttemptStartScore = this.state.score;
+      if(this.state.roomAttemptStartCorrect === undefined) this.state.roomAttemptStartCorrect = this.state.correct;
+      if(this.state.roomAttemptStartWrong === undefined) this.state.roomAttemptStartWrong = this.state.wrong;
+      if(!this.state.roomAttemptStartWrongCat) this.state.roomAttemptStartWrongCat = {...this.state.wrongCategoryCount};
       document.getElementById('hudAvatarInitial').textContent = (this.state.student.nickname||this.state.student.name||'?').trim().charAt(0).toUpperCase();
       document.getElementById('hudAvatarName').textContent = this.state.student.nickname || this.state.student.name;
       document.getElementById('resumeBanner').classList.remove('show');
@@ -821,6 +848,10 @@ const Game = {
       maxStreak: 0,
       bonusTotal: 0,
       wrongCategoryCount: {},
+      roomAttemptStartScore: 0,
+      roomAttemptStartCorrect: 0,
+      roomAttemptStartWrong: 0,
+      roomAttemptStartWrongCat: {},
       startTime: Date.now(),
       roomStartTime: Date.now(),
       answeredCurrent: false,
@@ -843,6 +874,8 @@ const Game = {
       roomIndex: s.roomIndex, qIndex: s.qIndex, score: s.score, maxScore: s.maxScore,
       correct: s.correct, wrong: s.wrong, lives: s.lives, streak: s.streak, maxStreak: s.maxStreak,
       bonusTotal: s.bonusTotal,
+      roomAttemptStartScore: s.roomAttemptStartScore, roomAttemptStartCorrect: s.roomAttemptStartCorrect,
+      roomAttemptStartWrong: s.roomAttemptStartWrong, roomAttemptStartWrongCat: s.roomAttemptStartWrongCat,
       wrongCategoryCount: s.wrongCategoryCount, startTime: s.startTime, roomStartTime: Date.now(),
       answeredCurrent: false,
     };
@@ -908,12 +941,15 @@ const Game = {
     document.getElementById('roomDesc').textContent = room.desc;
 
     // Fix: refill lives at the start of every room (not just once at game start),
-    // so running out of hearts in an earlier room never leaves the player permanently
-    // stuck at 0 for the rest of the game.
+    // and snapshot the room-attempt baseline so a failed room (0 hearts) can be
+    // fully undone and retried without affecting earlier rooms' results.
     let justHealed = false;
-    if(s.qIndex === 0 && s.lives < 3){
-      s.lives = 3;
-      justHealed = true;
+    if(s.qIndex === 0){
+      if(s.lives < 3){ s.lives = 3; justHealed = true; }
+      s.roomAttemptStartScore = s.score;
+      s.roomAttemptStartCorrect = s.correct;
+      s.roomAttemptStartWrong = s.wrong;
+      s.roomAttemptStartWrongCat = {...s.wrongCategoryCount};
     }
 
     this.renderDoorsMap();
@@ -963,6 +999,7 @@ const Game = {
     document.getElementById('feedbackArea').className = 'feedback';
     document.getElementById('feedbackArea').textContent = '';
     document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('nextBtn').textContent = 'ถัดไป →';
     document.getElementById('streakChip').style.display = 'none';
     this.updateHud();
   },
@@ -1011,11 +1048,16 @@ const Game = {
       card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
     }
     document.getElementById('nextBtn').style.display = 'block';
+    document.getElementById('nextBtn').textContent = (s.lives<=0) ? '🔑 ไปลองห้องนี้อีกครั้ง' : 'ถัดไป →';
     this.updateHud();
   },
 
   nextQuestion(){
     const s = this.state;
+    if(s.lives <= 0){
+      this.failRoom();
+      return;
+    }
     const room = s.rooms[s.roomIndex];
     s.qIndex += 1;
     if(s.qIndex >= room.questions.length){
@@ -1023,6 +1065,37 @@ const Game = {
     } else {
       this.renderQuestion();
     }
+  },
+
+  failRoom(){
+    const s = this.state;
+    clearInterval(this.roomTimerHandle);
+
+    // fully undo whatever was earned during this failed attempt at the room
+    s.score = s.roomAttemptStartScore;
+    s.correct = s.roomAttemptStartCorrect;
+    s.wrong = s.roomAttemptStartWrong;
+    s.wrongCategoryCount = {...s.roomAttemptStartWrongCat};
+    s.streak = 0;
+
+    // draw a fresh set of questions for this room and reset for a clean retry
+    const meta = ROOMS_META[s.roomIndex];
+    const pool = QUESTION_BANK.filter(q=>q.difficulty===meta.difficulty);
+    s.rooms[s.roomIndex] = {...s.rooms[s.roomIndex], questions: shuffle(pool).slice(0, meta.count)};
+    s.qIndex = 0;
+    s.lives = 3;
+
+    this.playFailSound();
+    this.animateScoreTo(s.score);
+    document.getElementById('questionArea').style.display = 'none';
+    document.getElementById('unlockPanel').style.display = 'none';
+    document.getElementById('failPanel').style.display = 'block';
+    this.saveProgress();
+  },
+
+  retryRoom(){
+    document.getElementById('failPanel').style.display = 'none';
+    this.renderRoomIntroThenQuestion(false);
   },
 
   finishRoom(){
